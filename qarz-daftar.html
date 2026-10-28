@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Qarz daftar</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#14171a;--mut:#6b7280;--line:#e5e7eb;--pri:#2a7de1;--prit:#fff;--red:#d92d20;--grn:#079455;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1318;--card:#1a2029;--tx:#eef1f5;--mut:#9aa4b2;--line:#2a323d;--pri:#4b9bff;--prit:#06101d;--red:#ff6b5e;--grn:#32d583;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1318;--card:#1a2029;--tx:#eef1f5;--mut:#9aa4b2;--line:#2a323d;--pri:#4b9bff;--prit:#06101d;--red:#ff6b5e;--grn:#32d583;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:16px 16px 110px}
+h1{font-size:22px;margin:4px 0 14px}
+.total{background:var(--pri);color:var(--prit);border-radius:16px;padding:18px}
+.total small{opacity:.85;display:block}
+.total b{font-size:28px;display:block;margin-top:2px}
+.search{width:100%;margin:14px 0 10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer}
+.row .n{font-weight:600}
+.row .s{color:var(--mut);font-size:13px}
+.amt{font-weight:700;white-space:nowrap}
+.red{color:var(--red)}.grn{color:var(--grn)}
+.empty{text-align:center;color:var(--mut);padding:36px 10px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
+.bar .in{max-width:560px;margin:0 auto;display:flex;gap:8px}
+.btn{flex:1;border:0;border-radius:12px;padding:14px;background:var(--pri);color:var(--prit);font-weight:600;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--tx);border:1px solid var(--line)}
+.btn.grnb{background:var(--grn);color:#fff}
+.btn.redb{background:var(--red);color:#fff}
+.link{background:none;border:0;color:var(--pri);padding:6px 0;cursor:pointer}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.big{font-size:28px;font-weight:700}
+.ent{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ent:last-child{border:0}
+.x{background:none;border:0;color:var(--mut);cursor:pointer;padding:4px 8px}
+.warn{background:#fff4d6;color:#6b4e00;border-radius:10px;padding:10px;font-size:13px;margin-bottom:10px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{width:100%;max-width:560px;background:var(--card);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:18px}
+.sheet label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+.sheet input,.sheet textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.sheet textarea{min-height:140px;font-size:12px}
+.acts{display:flex;gap:8px;margin-top:16px}
+.err{color:var(--red);font-size:13px;margin-top:8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.pill{flex:none;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);cursor:pointer}
+.pill.on{background:var(--pri);color:var(--prit);border-color:var(--pri)}
+.bt{height:10px;background:var(--line);border-radius:6px;margin-top:4px;overflow:hidden}.bt i{display:block;height:100%}
+.sheet select,.card input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--tx)}
+.mb{display:flex;align-items:flex-end;gap:2px;height:84px;margin:12px 0 4px}.mb i{flex:1;border-radius:2px;min-width:2px}
+.note{color:var(--mut);font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="bar"><div class="in" id="bar"></div></div>
+<div id="sheet"></div>
+<script>
+var KEY='qarzdaftar:v1',db={people:[]},memOnly=false,view=null,q='',armed='';
+function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&Array.isArray(d.people))db=d}}catch(e){memOnly=true}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){if(!memOnly){memOnly=true;render()}}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(n){return Math.abs(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0')+'\u00A0soʻm'}
+function bal(p){return p.entries.reduce(function(s,e){return s+(e.type==='debt'?e.amount:-e.amount)},0)}
+function pad(n){return(n<10?'0':'')+n}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function fd(s){return String(s).split('-').reverse().join('.')}
+function find(id){return db.people.filter(function(p){return p.id===id})[0]}
+function balHtml(b){return b>0?'<span class="amt red">'+money(b)+'</span>':b<0?'<span class="amt grn">+'+money(b)+'</span>':'<span class="amt grn">Qarzi yoʻq</span>'}
+function lastDate(p){return p.entries.length?fd(p.entries[p.entries.length-1].date):'yozuv yoʻq'}
+
+function renderDebt(){
+  var p=view?find(view):null;if(view&&!p)view=null;
+  var app=document.getElementById('app'),bar=document.getElementById('bar');
+  var warn=memOnly?'<div class="warn">Saqlash ishlamayapti: ilovani yopsangiz ma’lumotlar yoʻqolishi mumkin. “Zaxira nusxa” orqali nusxa oling.</div>':'';
+  if(!p){
+    var tot=db.people.reduce(function(s,x){var b=bal(x);return s+(b>0?b:0)},0);
+    app.innerHTML=warn+tabsHtml()+'<h1>Qarz daftar</h1><div class="total"><small>Jami qarzdorlik</small><b>'+money(tot)+'</b><small>'+usdTxt(tot)+' · '+db.people.length+' ta mijoz</small></div>'+
+      '<input class="search" id="q" placeholder="Ism yoki telefon boʻyicha qidirish" value="'+esc(q)+'">'+'<div id="plist"></div>'+
+      '<button class="link" data-act="backup">Zaxira nusxa / tiklash</button>';
+    bar.innerHTML='<button class="btn" data-act="newperson">+ Yangi mijoz</button>';
+    renderList();
+  }else{
+    var b=bal(p),h='';
+    h=warn+'<div class="top"><button class="link" data-act="back">← Orqaga</button></div>'+
+      '<h1>'+esc(p.name)+'</h1>'+(p.phone?'<div style="margin:-8px 0 12px"><a class="link" href="tel:'+esc(p.phone)+'">'+esc(p.phone)+'</a></div>':'')+
+      '<div class="card"><div style="color:var(--mut);font-size:13px">Joriy holat</div><div class="big">'+(b>0?'<span class="red">'+money(b)+'</span>':b<0?'<span class="grn">+'+money(b)+' ortiqcha</span>':'<span class="grn">Qarzi yoʻq</span>')+'</div></div>'+
+      '<div class="card"><b>Tarix</b>';
+    if(!p.entries.length)h+='<div class="empty">Hali yozuv yoʻq</div>';
+    p.entries.slice().reverse().forEach(function(e){
+      var a='del-e:'+e.id;
+      h+='<div class="ent"><div><div>'+(e.type==='debt'?'Qarz berildi':'Toʻlov qabul qilindi')+'</div><div style="color:var(--mut);font-size:13px">'+fd(e.date)+(e.note?' · '+esc(e.note):'')+'</div></div><div style="text-align:right"><div class="amt '+(e.type==='debt'?'red':'grn')+'">'+(e.type==='debt'?'+':'−')+money(e.amount)+'</div><button class="x" data-act="'+a+'">'+(armed===a?'Aniq oʻchirilsinmi?':'oʻchirish')+'</button></div></div>';
+    });
+    h+='</div><button class="link" data-act="del-p:'+p.id+'">'+(armed==='del-p:'+p.id?'Aniq: mijoz butunlay oʻchirilsinmi?':'Mijozni oʻchirish')+'</button>';
+    app.innerHTML=h;
+    bar.innerHTML='<button class="btn" data-act="debt">+ Qarz berdim</button><button class="btn grnb" data-act="pay">Toʻlov oldim</button>';
+  }
+}
+function renderList(){
+  var el=document.getElementById('plist');if(!el)return;
+  var s=q.trim().toLowerCase();
+  var arr=db.people.filter(function(p){return !s||p.name.toLowerCase().indexOf(s)>-1||(p.phone||'').indexOf(s)>-1});
+  arr.sort(function(a,b){return bal(b)-bal(a)||a.name.localeCompare(b.name)});
+  if(!arr.length){el.innerHTML='<div class="empty">'+(db.people.length?'Hech narsa topilmadi':'Hozircha mijoz yoʻq.<br>Pastdagi tugma orqali qoʻshing.')+'</div>';return}
+  el.innerHTML=arr.map(function(p){return '<button class="row" data-act="open:'+p.id+'"><div><div class="n">'+esc(p.name)+'</div><div class="s">Oxirgi yozuv: '+lastDate(p)+'</div></div>'+balHtml(bal(p))+'</button>'}).join('');
+}
+function openSheet(html){document.getElementById('sheet').innerHTML='<div class="ov" data-act="close"><div class="sheet" data-stop="1">'+html+'</div></div>'}
+function closeSheet(){document.getElementById('sheet').innerHTML=''}
+function sheetPerson(){openSheet('<h2>Yangi mijoz</h2><label>Ismi</label><input id="f-name" placeholder="Masalan: Aziz aka"><label>Telefon (ixtiyoriy)</label><input id="f-phone" inputmode="tel" placeholder="+998 90 123 45 67"><div class="err" id="err"></div><div class="acts"><button class="btn alt" data-act="close">Bekor</button><button class="btn" data-act="save-person">Saqlash</button></div>')}
+function sheetEntry(kind){openSheet('<h2>'+(kind==='debt'?'Qarz berdim':'Toʻlov qabul qildim')+'</h2><label>Summa (soʻm)</label><input id="f-amt" inputmode="numeric" placeholder="100000"><label>Izoh (ixtiyoriy)</label><input id="f-note" placeholder="Masalan: 325 UC"><label>Sana</label><input id="f-date" type="date" value="'+today()+'"><div class="err" id="err"></div><div class="acts"><button class="btn alt" data-act="close">Bekor</button><button class="btn '+(kind==='debt'?'':'grnb')+'" data-act="save-entry:'+kind+'">Saqlash</button></div>')}
+function sheetBackup(){openSheet('<h2>Zaxira nusxa</h2><label>Quyidagi matnni nusxalab, xavfsiz joyga (masalan, “Saved Messages”) saqlang. Tiklash uchun shu matnni qaytib shu yerga qoʻying.</label><textarea id="f-json">'+esc(JSON.stringify(db))+'</textarea><div class="err" id="err"></div><div class="acts"><button class="btn alt" data-act="copy">Nusxa olish</button><button class="btn redb" data-act="restore">'+(armed==='restore'?'Aniq tiklansinmi?':'Tiklash')+'</button></div><div class="acts"><button class="btn alt" data-act="close">Yopish</button></div>')}
+function err(m){var e=document.getElementById('err');if(e)e.textContent=m}
+function val(id){var e=document.getElementById(id);return e?e.value:''}
+
+document.addEventListener('click',function(ev){
+  var t=ev.target;
+  if(t.closest&&t.closest('[data-stop]')&&!t.closest('[data-act]'))return;
+  var el=t.closest?t.closest('[data-act]'):null;if(!el)return;
+  var act=el.getAttribute('data-act'),parts=act.split(':'),k=parts[0],arg=parts[1];
+  if(k==='close'){if(el.classList.contains('ov')&&t!==el)return;armed='';closeSheet();return}
+  if(tabAct(k,arg,act))return;
+  if(k==='open'){view=arg;armed='';render();window.scrollTo(0,0)}
+  else if(k==='back'){view=null;armed='';render()}
+  else if(k==='newperson')sheetPerson();
+  else if(k==='save-person'){
+    var n=val('f-name').trim();if(!n){err('Ismni kiriting');return}
+    var p={id:uid(),name:n,phone:val('f-phone').trim(),entries:[]};db.people.push(p);save();closeSheet();view=p.id;render()}
+  else if(k==='debt'||k==='pay')sheetEntry(k);
+  else if(k==='save-entry'){
+    var a=parseInt(val('f-amt').replace(/\D/g,''),10);if(!a||a<=0){err('Summani toʻgʻri kiriting');return}
+    var p2=find(view);if(!p2)return;
+    p2.entries.push({id:uid(),type:arg==='debt'?'debt':'pay',amount:a,note:val('f-note').trim(),date:val('f-date')||today()});
+    p2.entries.sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:0});
+    save();closeSheet();render()}
+  else if(k==='del-e'){
+    if(armed!==act){armed=act;render();return}
+    var p3=find(view);p3.entries=p3.entries.filter(function(e){return e.id!==arg});armed='';save();render()}
+  else if(k==='del-p'){
+    if(armed!==act){armed=act;render();return}
+    db.people=db.people.filter(function(x){return x.id!==arg});armed='';view=null;save();render()}
+  else if(k==='backup'){armed='';sheetBackup()}
+  else if(k==='copy'){
+    var ta=document.getElementById('f-json');ta.select();
+    try{navigator.clipboard.writeText(ta.value).then(function(){err('Nusxa olindi')},function(){document.execCommand('copy');err('Nusxa olindi')})}catch(e){try{document.execCommand('copy');err('Nusxa olindi')}catch(e2){err('Matnni qoʻlda belgilab nusxalang')}}}
+  else if(k==='restore'){
+    if(armed!=='restore'){armed='restore';sheetBackup();return}
+    try{var d=JSON.parse(val('f-json'));if(!d||!Array.isArray(d.people))throw 0;db=d;fix();armed='';save();closeSheet();view=null;render()}
+    catch(e){armed='';sheetBackup();err('Matn notoʻgʻri formatda')}}
+});
+document.addEventListener('input',function(ev){if(ev.target.id==='q'){q=ev.target.value;renderList()}});
+var tab='debt',per='day';
+var TABS=[['debt','Qarz'],['inc','Daromad'],['seed','Kapital'],['calm','Xotirjamlik'],['fx','Kurs']];
+function fix(){db.people=db.people||[];db.tx=db.tx||[];db.rates=db.rates||[];db.seed=db.seed||{};db.seed.moves=db.seed.moves||[]}
+function num(s){return parseInt(String(s).replace(/\D/g,''),10)||0}
+function flt(s){return parseFloat(String(s).replace(/\s/g,'').replace(',','.'))||0}
+function usd(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function rate(){return db.rates.length?db.rates[db.rates.length-1].value:0}
+function sm(n){return(n<0?'−':'')+money(n)}
+function usdTxt(n){var r=rate();return r?(n<0?'−':'')+'≈ $'+usd(Math.abs(n)/r):'USD uchun kurs kiritilmagan'}
+function kv(a,b){return '<div class="ent"><span>'+a+'</span><b>'+b+'</b></div>'}
+function tabsHtml(){return '<div class="tabs">'+TABS.map(function(t){return '<button class="pill'+(tab===t[0]?' on':'')+'" data-act="tab:'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>'}
+function rateWarn(){var l=db.rates[db.rates.length-1];return !l?'<div class="warn">USD hisobi uchun “Kurs” boʻlimida bugungi kursni kiriting.</div>':l.date!==today()?'<div class="warn">Kurs oxirgi marta '+fd(l.date)+' kuni yangilangan. Bugungi kursni kiriting.</div>':''}
+function pStart(){var d=new Date();if(per==='week')d.setDate(d.getDate()-6);if(per==='month')d.setDate(1);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function inP(t){return t.date>=pStart()&&t.date<=today()}
+function sums(L){var s={rev:0,cost:0,exp:0};L.forEach(function(t){if(t.type==='in'){s.rev+=t.amount;s.cost+=t.cost||0}else s.exp+=t.amount});s.profit=s.rev-s.cost-s.exp;return s}
+function seedBal(){return db.seed.moves.reduce(function(s,m){return s+(m.type==='in'?m.amount:-m.amount)},0)}
+function byDate(a,b){return a.date<b.date?1:a.date>b.date?-1:0}
+function render(){document.querySelector('.bar').style.display='';if(tab==='debt'||view)renderDebt();else renderTab()}
+function renderTab(){
+  var app=document.getElementById('app'),bar=document.getElementById('bar');
+  var bars={inc:'<button class="btn" data-act="newtx:in">+ Savdo</button><button class="btn alt" data-act="newtx:out">− Xarajat</button>',seed:'<button class="btn" data-act="seed:in">+ Kapital qoʻshish</button><button class="btn alt" data-act="seed:out">− Olish</button>',calm:'',fx:''};
+  var fn={inc:rInc,seed:rSeed,calm:rCalm,fx:rFx};
+  app.innerHTML=(memOnly?'<div class="warn">Saqlash ishlamayapti: “Zaxira nusxa” orqali nusxa oling.</div>':'')+fn[tab]();
+  bar.innerHTML=bars[tab];document.querySelector('.bar').style.display=bars[tab]?'':'none';
+}
+function rInc(){
+  var L=db.tx.filter(inP),s=sums(L),svc={};
+  L.forEach(function(t){if(t.type==='in')svc[t.svc]=(svc[t.svc]||0)+t.amount-(t.cost||0)});
+  var ks=Object.keys(svc).sort(function(a,b){return svc[b]-svc[a]}),mx=Math.max.apply(null,ks.map(function(k){return Math.abs(svc[k])}).concat([1]));
+  var pills=[['day','Kun'],['week','Hafta'],['month','Oy']].map(function(x){return '<button class="pill'+(per===x[0]?' on':'')+'" data-act="per:'+x[0]+'">'+x[1]+'</button>'}).join('');
+  var h=tabsHtml()+rateWarn()+'<h1>Daromad va sof foyda</h1><div class="tabs">'+pills+'</div>'+
+   '<div class="total"><small>Sof foyda</small><b>'+sm(s.profit)+'</b><small>'+usdTxt(s.profit)+'</small></div>'+
+   '<div class="card" style="margin-top:12px">'+kv('Tushum',sm(s.rev))+kv('Tannarx',sm(-s.cost))+kv('Xarajat',sm(-s.exp))+'</div>'+
+   '<div class="card"><b>Xizmat turi boʻyicha foyda</b>'+(ks.length?ks.map(function(k){return '<div style="margin-top:10px"><div class="ent" style="padding:0;border:0"><span>'+esc(k)+'</span><b class="'+(svc[k]<0?'red':'')+'">'+sm(svc[k])+'</b></div><div class="bt"><i style="width:'+Math.round(Math.abs(svc[k])/mx*100)+'%;background:'+(svc[k]<0?'var(--red)':'var(--grn)')+'"></i></div></div>'}).join(''):'<div class="empty">Bu davrda savdo yoʻq</div>')+'</div>';
+  var rec=db.tx.slice().sort(byDate).slice(0,15);
+  h+='<div class="card"><b>Oxirgi yozuvlar</b>'+(rec.length?rec.map(function(t){var a='del-t:'+t.id,pf=t.type==='in'?t.amount-(t.cost||0):-t.amount;return '<div class="ent"><div><div>'+(t.type==='in'?esc(t.svc):'Xarajat'+(t.svc&&t.svc!=='Xarajat'?': '+esc(t.svc):''))+'</div><div class="note" style="margin:0">'+fd(t.date)+(t.note?' · '+esc(t.note):'')+'</div></div><div style="text-align:right"><div class="amt '+(pf<0?'red':'grn')+'">'+sm(pf)+'</div><button class="x" data-act="'+a+'">'+(armed===a?'Aniq oʻchirilsinmi?':'oʻchirish')+'</button></div></div>'}).join(''):'<div class="empty">Hali yozuv yoʻq</div>')+'</div>';
+  return h}
+function rSeed(){
+  var m=db.seed.moves,i=0,o=0;m.forEach(function(x){if(x.type==='in')i+=x.amount;else o+=x.amount});
+  var h=tabsHtml()+rateWarn()+'<h1>Boshlangʻich kapital</h1><div class="total"><small>Hozirgi kapital</small><b>'+sm(i-o)+'</b><small>'+usdTxt(i-o)+'</small></div>'+
+   '<div class="card" style="margin-top:12px">'+kv('Kiritilgan',sm(i))+kv('Olingan',sm(-o))+'<div class="note">Bu mablagʻ foyda va xarajatlardan alohida hisoblanadi. Faqat yozuv yuritiladi, pulning oʻzi emas.</div></div>'+
+   '<div class="card"><b>Harakatlar</b>'+(m.length?m.slice().sort(byDate).map(function(x){var a='del-s:'+x.id;return '<div class="ent"><div><div>'+(x.type==='in'?'Qoʻshildi':'Olindi')+'</div><div class="note" style="margin:0">'+fd(x.date)+(x.note?' · '+esc(x.note):'')+'</div></div><div style="text-align:right"><div class="amt '+(x.type==='in'?'grn':'red')+'">'+(x.type==='in'?'+':'−')+money(x.amount)+'</div><button class="x" data-act="'+a+'">'+(armed===a?'Aniq oʻchirilsinmi?':'oʻchirish')+'</button></div></div>'}).join(''):'<div class="empty">Hali kapital kiritilmagan</div>')+'</div>';
+  return h}
+function rCalm(){
+  var all=db.tx.map(function(t){return t.date});db.seed.moves.forEach(function(m){all.push(m.date)});db.people.forEach(function(p){p.entries.forEach(function(e){all.push(e.date)})});
+  var h=tabsHtml()+'<h1>Balans va xotirjamlik</h1><div class="card">Xavotir kelganda, avval raqamlarga qarang. Hisobot faqat daftarga kiritilgan ma’lumotga asoslanadi.</div>';
+  if(!all.length)return h+'<div class="empty">Hozircha yozuv yoʻq. Savdo va kapital qoʻshilgach, bu yerda tahlil paydo boʻladi.</div>';
+  all.sort();var first=all[0].slice(0,7),now=today().slice(0,7),ms=[],y=+first.slice(0,4),mo=+first.slice(5,7);
+  while((y+'-'+pad(mo))<=now&&ms.length<900){ms.push(y+'-'+pad(mo));mo++;if(mo>12){mo=1;y++}}
+  ms=ms.slice(-60);
+  var pr=ms.map(function(k){var l=db.tx.filter(function(t){return t.date.slice(0,7)===k});return{k:k,n:l.length,p:sums(l).profit}});
+  var act=pr.filter(function(x){return x.n>0}),good=act.filter(function(x){return x.p>=0}).length;
+  var tot=sums(db.tx).profit,owed=db.people.reduce(function(s,p){var b=bal(p);return s+(b>0?b:0)},0);
+  var mx=Math.max.apply(null,pr.map(function(x){return Math.abs(x.p)}).concat([1]));
+  var msg=act.length<2?'Hozircha ma’lumot kam: xulosa uchun yozuvlar toʻplanishi kerak. Bu normal holat.':tot>=0&&good>=act.length/2?'Daftardagi raqamlar barqaror koʻrinmoqda: oylarning koʻpchiligi foyda bilan yopilgan.':tot>=0?'Umumiy natija ijobiy, lekin zaif oylar ham bor. Ularni xizmat turi boʻyicha koʻrib chiqish foydali.':'Hozircha xarajatlar tushumdan koʻp. Bu qaror uchun ma’lumot, ayb emas: narx va tannarxni “Kurs” boʻlimida qayta koʻrib chiqing.';
+  h+='<div class="card"><b>'+msg+'</b></div>'+
+   '<div class="card"><b>Oylik sof foyda ('+ms.length+' oy)</b><div class="mb">'+pr.map(function(x){return '<i title="'+x.k+'" style="height:'+Math.max(3,Math.round(Math.abs(x.p)/mx*84))+'px;background:'+(!x.n?'var(--line)':x.p<0?'var(--red)':'var(--grn)')+'"></i>'}).join('')+'</div><div class="note" style="display:flex;justify-content:space-between;margin:0"><span>'+ms[0]+'</span><span>'+ms[ms.length-1]+'</span></div></div>'+
+   '<div class="card">'+kv('Jami sof foyda',sm(tot))+kv('Foydali oylar',good+' / '+act.length)+kv('Mijozlar sizdan qarzdor',money(owed))+kv('Kapital (alohida)',sm(seedBal()))+'<div class="note">Koʻproq yillarni koʻrish uchun eski savdolarni oʻz sanasi bilan qoʻshing.</div></div>';
+  return h}
+function rFx(){
+  var r=rate(),hs=db.rates.slice(-8).reverse(),tot=sums(db.tx).profit+seedBal(),ch='';
+  if(db.rates.length>1){var pv=db.rates[db.rates.length-2].value,pc=(r-pv)/pv*100;ch='<div class="note">Oldingi kursga nisbatan '+(pc>=0?'+':'−')+Math.abs(pc).toFixed(2)+'%: narxlar ham taxminan shuncha oʻzgarishi kerak.</div>'}
+  return tabsHtml()+rateWarn()+'<h1>Valyuta va kurslar</h1><div class="total"><small>Jami hisob (kapital + sof foyda)</small><b>'+sm(tot)+'</b><small>'+usdTxt(tot)+'</small></div>'+
+   '<div class="card" style="margin-top:12px"><b>Bugungi kurs (1 USD = ? soʻm)</b><div style="display:flex;gap:8px;margin-top:8px"><input id="f-rate" inputmode="decimal" placeholder="'+(r||'12700')+'"><button class="btn" style="flex:none" data-act="save-rate">Saqlash</button></div><div class="err" id="err"></div>'+ch+(hs.length?'<div class="note">'+hs.map(function(x){return fd(x.date)+': '+x.value}).join(' · ')+'</div>':'')+'</div>'+
+   '<div class="card"><b>Konverter</b><div style="display:flex;gap:8px;margin-top:8px"><input id="c-usd" inputmode="decimal" placeholder="USD"><input id="c-uzs" inputmode="numeric" placeholder="soʻm"></div></div>'+
+   '<div class="card"><b>Narx hisoblagich</b><div class="note" style="margin:4px 0 8px">Tannarx (USD) va foyda foizi boʻyicha sotuv narxi</div><div style="display:flex;gap:8px"><input id="p-usd" inputmode="decimal" placeholder="Tannarx, USD"><input id="p-m" inputmode="decimal" value="10" placeholder="Foyda, %"></div><div id="p-out" style="margin-top:10px;font-weight:700"></div></div>'}
+function sheetTx(k){openSheet('<h2>'+(k==='in'?'Yangi savdo':'Xarajat')+'</h2>'+(k==='in'?'<label>Xizmat turi</label><select id="f-svc"><option>UC</option><option>Paket</option><option>Boshqa</option></select>':'<label>Xarajat turi (ixtiyoriy)</label><input id="f-svc" placeholder="Reklama, internet...">')+'<label>Summa (soʻm)</label><input id="f-amt" inputmode="numeric">'+(k==='in'?'<label>Tannarx (UC’ni qanchaga olgansiz)</label><div style="display:flex;gap:8px"><input id="f-cost" inputmode="decimal" placeholder="0"><select id="f-cur" style="width:96px"><option>UZS</option><option>USD</option></select></div>':'')+'<label>Izoh (ixtiyoriy)</label><input id="f-note"><label>Sana</label><input id="f-date" type="date" value="'+today()+'"><div class="err" id="err"></div><div class="acts"><button class="btn alt" data-act="close">Bekor</button><button class="btn" data-act="save-tx:'+k+'">Saqlash</button></div>')}
+function sheetSeed(k){openSheet('<h2>'+(k==='in'?'Kapital qoʻshish':'Kapitaldan olish')+'</h2><label>Summa (soʻm)</label><input id="f-amt" inputmode="numeric"><label>Izoh</label><input id="f-note" placeholder="'+(k==='in'?'Boshlangʻich mablagʻ':'Nima uchun olinyapti?')+'"><label>Sana</label><input id="f-date" type="date" value="'+today()+'"><div class="err" id="err"></div><div class="acts"><button class="btn alt" data-act="close">Bekor</button><button class="btn" data-act="save-seed:'+k+'">Saqlash</button></div>')}
+function tabAct(k,arg,act){
+  if(k==='tab'){tab=arg;view=null;armed='';render();window.scrollTo(0,0);return true}
+  if(k==='per'){per=arg;render();return true}
+  if(k==='newtx'){sheetTx(arg);return true}
+  if(k==='seed'){sheetSeed(arg);return true}
+  if(k==='save-tx'){
+    var a=num(val('f-amt'));if(!a){err('Summani kiriting');return true}
+    var t={id:uid(),type:arg==='in'?'in':'out',svc:(val('f-svc')||(arg==='in'?'Boshqa':'Xarajat')).trim(),amount:a,note:val('f-note').trim(),date:val('f-date')||today()};
+    if(arg==='in'){var c=flt(val('f-cost'));if(val('f-cur')==='USD'){if(!rate()){err('Avval “Kurs” boʻlimida kursni kiriting');return true}t.costUSD=c;t.cost=Math.round(c*rate())}else t.cost=Math.round(c)}
+    db.tx.push(t);save();closeSheet();render();return true}
+  if(k==='save-seed'){
+    var b=num(val('f-amt'));if(!b){err('Summani kiriting');return true}
+    db.seed.moves.push({id:uid(),type:arg==='in'?'in':'out',amount:b,note:val('f-note').trim(),date:val('f-date')||today()});save();closeSheet();render();return true}
+  if(k==='del-t'||k==='del-s'){
+    if(armed!==act){armed=act;render();return true}
+    var L=k==='del-t'?db.tx:db.seed.moves,i=L.map(function(x){return x.id}).indexOf(arg);if(i>-1)L.splice(i,1);armed='';save();render();return true}
+  if(k==='save-rate'){
+    var v=flt(val('f-rate'));if(v<1000||v>100000){err('Kursni toʻgʻri kiriting (masalan, 12700)');return true}
+    var l=db.rates[db.rates.length-1];if(l&&l.date===today())l.value=v;else db.rates.push({date:today(),value:v});save();render();return true}
+  return false}
+document.addEventListener('input',function(ev){
+  var i=ev.target.id,r=rate(),$=function(x){return document.getElementById(x)};
+  if(!r)return;
+  if(i==='c-usd'){var v=flt(ev.target.value);$('c-uzs').value=v?Math.round(v*r):''}
+  if(i==='c-uzs'){var u=num(ev.target.value);$('c-usd').value=u?(u/r).toFixed(2):''}
+  if(i==='p-usd'||i==='p-m'){var c=flt($('p-usd').value),m=flt($('p-m').value);$('p-out').textContent=c?'Tavsiya etilgan narx: '+money(Math.ceil(c*r*(1+m/100)/1000)*1000):''}
+});
+load();fix();render();
+</script>
+</body>
+</html>
